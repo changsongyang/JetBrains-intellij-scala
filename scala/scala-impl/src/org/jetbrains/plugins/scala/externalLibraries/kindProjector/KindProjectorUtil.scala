@@ -14,6 +14,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.statements.ScFunction
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScTypeParam
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.CreationContext
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.synthetic.ScSyntheticClass
 import org.jetbrains.plugins.scala.lang.psi.types.api.{Any, ValueType}
 import org.jetbrains.plugins.scala.lang.psi.types.{ScParameterizedType, ScType, ScalaType}
@@ -109,7 +110,7 @@ object KindProjectorUtil {
          |}
        """.stripMargin
 
-    ScalaPsiElementFactory.createScalaFileFromText(text, ScalaFeatures.default)(ctx).getFirstChild
+    ScalaPsiElementFactory.createScalaFileFromText(text, CreationContext.default)(ctx).getFirstChild
   }
 
   /**

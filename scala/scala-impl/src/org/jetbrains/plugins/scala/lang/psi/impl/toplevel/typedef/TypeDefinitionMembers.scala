@@ -15,6 +15,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.statements._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScClassParameter
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef._
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.{ScNamedElement, ScTypedDefinition}
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.CreationContext
 import org.jetbrains.plugins.scala.lang.psi.impl.{ScalaPsiElementFactory, ScalaPsiManager}
 import org.jetbrains.plugins.scala.lang.psi.types._
 import org.jetbrains.plugins.scala.lang.psi.types.api.{NamedTupleType, ParameterizedType, StdType}
@@ -490,7 +491,7 @@ object TypeDefinitionMembers {
               case navigationElement =>
                 val property = ScalaPsiElementFactory.createMethodFromText(
                   text = s"def $name: ${typ.canonicalText}",
-                  features = ScalaFeatures.defaultScala3,
+                  creationContext = CreationContext.defaultScala3,
                 )(p.projectContext)
 
                 navigationElement.foreach {

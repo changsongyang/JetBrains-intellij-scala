@@ -138,7 +138,7 @@ class ScalaOverrideContributor extends ScalaCompletionContributor {
     import TypeAnnotationUtil._
     import clazz.projectContext
 
-    val scalaFeatures = ScalaFeatures.forPsiOrDefault(clazz)
+    val creationContext = CreationContext.fromPsi(clazz)
 
     val text: String = classMember match {
       case member @ ScMethodMember(signature, isOverride) =>
@@ -149,11 +149,11 @@ class ScalaOverrideContributor extends ScalaCompletionContributor {
               signature,
               needsOverrideModifier = true,
               mBody,
-              scalaFeatures,
+              creationContext,
               withComment = false,
               withAnnotation = false
             )
-          else createMethodFromSignature(signature, mBody, scalaFeatures, withComment = false, withAnnotation = false)
+          else createMethodFromSignature(signature, mBody, creationContext, withComment = false, withAnnotation = false)
 
         removeTypeAnnotationIfNeeded(fun)
         fun.getText
@@ -167,7 +167,7 @@ class ScalaOverrideContributor extends ScalaCompletionContributor {
         }
         val newExtension = ScalaPsiElementFactory.createOverrideImplementExtensionMethod(
           extensionMethodConstructionInfo,
-          scalaFeatures,
+          creationContext,
           wrapMultipleExtensionsWithBraces = !clazz.containingFile.exists(_.useIndentationBasedSyntax),
           withComment = false
         )
@@ -186,7 +186,7 @@ class ScalaOverrideContributor extends ScalaCompletionContributor {
           member.substitutor,
           needsOverrideModifier = false,
           isVal = true,
-          features = scalaFeatures,
+          creationContext = creationContext,
           withBody = withBody
         )
         removeTypeAnnotationIfNeeded(variable)
@@ -197,7 +197,7 @@ class ScalaOverrideContributor extends ScalaCompletionContributor {
           member.substitutor,
           needsOverrideModifier = false,
           isVal = false,
-          features = scalaFeatures,
+          creationContext = creationContext,
           withBody = withBody
         )
         removeTypeAnnotationIfNeeded(variable)

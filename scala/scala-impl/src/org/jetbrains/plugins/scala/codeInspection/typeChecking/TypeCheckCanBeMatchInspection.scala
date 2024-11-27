@@ -85,7 +85,7 @@ object TypeCheckCanBeMatchInspection {
     }
 
   private def adjustMatch(matchStmt: ScMatch)(implicit project: Project): Unit =
-    if (project.indentationBasedSyntaxEnabled(matchStmt)) {
+    if (project.indentationBasedSyntaxEnabled(matchStmt.features)) {
       CodeStyleManager.getInstance(project).reformat(matchStmt)
       matchStmt.findFirstChildByType(ScalaTokenTypes.tLBRACE).foreach(_.delete())
       matchStmt.findLastChildByTypeScala[PsiElement](ScalaTokenTypes.tRBRACE).foreach(_.delete())

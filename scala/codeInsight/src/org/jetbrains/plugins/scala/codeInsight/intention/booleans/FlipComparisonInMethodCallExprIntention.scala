@@ -12,7 +12,7 @@ import org.jetbrains.plugins.scala.codeInsight.intention.caretIsInRange
 import org.jetbrains.plugins.scala.extensions.ParenthesizedElement.Ops
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createExpressionFromText
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createExpressionFromText}
 import org.jetbrains.plugins.scala.project.{ProjectContext, ScalaFeatures}
 
 import scala.util.chaining.scalaUtilChainingOps
@@ -88,7 +88,7 @@ object FlipComparisonInMethodCallExprIntention {
   )
 
   private def createFlippedCall(qualifier: String, operation: ScReferenceExpression, argument: ScExpression)
-                               (features: ScalaFeatures)
+                               (creationContext: CreationContext)
                                (implicit ctx: ProjectContext): ScMethodCall = {
     val adjustedArgument = argument match {
       case block: ScBlockExpr if block.isEnclosedByColon =>
@@ -98,7 +98,7 @@ object FlipComparisonInMethodCallExprIntention {
       case _ => argument
     }
 
-    createExpressionFromText(s"(${adjustedArgument.getText}).${Replacement(operation.refName)}($qualifier)", features)
+    createExpressionFromText(s"(${adjustedArgument.getText}).${Replacement(operation.refName)}($qualifier)", creationContext)
       .asInstanceOf[ScMethodCall]
       .tap { call =>
         call.thisExpr.foreach(stripUnnecessaryParentheses)

@@ -69,7 +69,7 @@ object ScGivenAliasDeclarationAnnotator extends ElementAnnotator[ScGivenAliasDec
       val deferredGiven =
         ScalaPsiElementFactory.createMethodFromText(
           decl.getText + " = scala.compiletime.deferred",
-          ScalaFeatures.forPsiOrDefault(decl)
+          decl
         )(decl)
 
       decl.replace(deferredGiven)
@@ -109,7 +109,7 @@ private[element] final class ImplementAnonymousAbstractGivenFix(declaration: ScG
     new ImplementAnonymousAbstractGivenFix(PsiTreeUtil.findSameElementInCopy(declaration, target))
 
   override protected def doInvoke(implicit editor: Editor, project: Project): Unit = {
-    val newElement = declaration.replace(createPsiElementFromText(s"${declaration.getText} = ???", features = declaration))
+    val newElement = declaration.replace(createPsiElementFromText(s"${declaration.getText} = ???", creationContext = declaration))
 
     if (!IntentionPreviewUtils.isIntentionPreviewActive) {
       CodeInsightUtilCore.forcePsiPostprocessAndRestoreElement(newElement) match {

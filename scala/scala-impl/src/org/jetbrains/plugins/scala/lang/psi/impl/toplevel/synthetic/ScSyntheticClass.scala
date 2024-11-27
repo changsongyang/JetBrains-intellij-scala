@@ -22,6 +22,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScTypeParam
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFun, ScFunction, ScTypeAlias}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScMember, ScObject, ScTemplateDefinition}
 import org.jetbrains.plugins.scala.lang.psi.api.{ScalaFile, ScalaPsiElement}
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.CreationContext
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.PsiClassFake
 import org.jetbrains.plugins.scala.lang.psi.impl.{ScalaPsiElementFactory, ScalaPsiManager}
 import org.jetbrains.plugins.scala.lang.psi.implicits.ImplicitProcessor
@@ -445,7 +446,7 @@ final class SyntheticClasses(project: Project) {
       @Language("Scala") text: String,
       sourceFileName: String,
     ): Unit = {
-      val file  = ScalaPsiElementFactory.createScalaFileFromText(text, ScalaFeatures.default)
+      val file  = ScalaPsiElementFactory.createScalaFileFromText(text, CreationContext.default)
       val alias = file.members.head.asInstanceOf[ScTypeAlias]
       val isScala3 = true
       alias.putUserData(SyntheticNamedElement.ScalaLibrarySyntheticDefinitionSourceFileName, (sourceFileName, isScala3))

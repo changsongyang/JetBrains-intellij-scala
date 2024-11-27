@@ -6,12 +6,11 @@ import org.jetbrains.plugins.scala.lang.psi.api.base.patterns.ScBindingPattern
 import org.jetbrains.plugins.scala.lang.psi.api.base.{ScAnnotation, ScModifierList, ScPrimaryConstructor}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScParameter, ScParameterClause, ScTypeParam}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScEnumCase, ScExtension, ScFunction, ScFunctionDefinition, ScTypeAlias, ScTypeAliasDefinition, ScValue, ScValueOrVariable, ScValueOrVariableDefinition}
-import org.jetbrains.plugins.scala.lang.psi.api.toplevel.{ScTypeBoundsOwner, ScTypedDefinition}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScEnum, ScGiven, ScGivenDefinition, ScObject, ScTemplateDefinition, ScTrait, ScTypeDefinition}
+import org.jetbrains.plugins.scala.lang.psi.api.toplevel.{ScTypeBoundsOwner, ScTypedDefinition}
 import org.jetbrains.plugins.scala.lang.psi.types.api.FunctionType
 import org.jetbrains.plugins.scala.lang.psi.types.result.TypeResult
 import org.jetbrains.plugins.scala.lang.psi.types.{ScType, TypePresentationContext}
-import org.jetbrains.plugins.scala.project.ScalaFeatures.forPsiOrDefault
 
 class ClassPrinter(isScala3: Boolean, extendsSeparator: String = " ") {
   def textOf(e: PsiElement): String = e match {
@@ -59,7 +58,11 @@ class ClassPrinter(isScala3: Boolean, extendsSeparator: String = " ") {
 
     val parents = {
       val superTypes = cls.extendsBlock.templateParents.map(_.superTypes).getOrElse(Seq.empty)
-      if (superTypes.isEmpty) "" else (if (isGiven) (if (isAnonymous && tps.isEmpty && ps.isEmpty) "" else ": ") else s"${extendsSeparator}extends ") + superTypes.map(textOf(_, parens = 1)).mkString(if (cls.isScala3 && !isGiven) ", " else s"${extendsSeparator}with ")
+      if (superTypes.isEmpty) ""
+      else (
+        if (isGiven) (if (isAnonymous && tps.isEmpty && ps.isEmpty) "" else ": ")
+        else s"${extendsSeparator}extends "
+        ) + superTypes.map(textOf(_, parens = 1)).mkString(if (cls.isInScala3Module && !isGiven) ", " else s"${extendsSeparator}with ")
     }
 
     val derivations = {

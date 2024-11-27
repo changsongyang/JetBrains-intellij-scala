@@ -15,7 +15,7 @@ import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createElementFromText
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createElementFromText}
 import org.jetbrains.plugins.scala.project.{ProjectContext, ScalaFeatures}
 
 import scala.collection.mutable
@@ -64,7 +64,7 @@ final class MergeIfToOrIntention extends PsiElementBaseIntentionAction with Dumb
         .append("else ").append(innerElseBranch.getText)
 
     implicit val ctx: ProjectContext = project
-    implicit val features: ScalaFeatures = element
+    implicit val creationContext: CreationContext = element
     val newIfStmt = ScalaPsiUtil.convertIfToBracelessIfNeeded(createElementFromText[ScIf](expr.toString(), element), recursive = true)
 
     IntentionPreviewUtils.write { () =>

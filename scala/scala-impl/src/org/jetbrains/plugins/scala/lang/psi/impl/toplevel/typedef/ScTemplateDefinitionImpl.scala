@@ -28,7 +28,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFunctionDefinition
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.templates.ScExtendsBlock
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef._
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.{ScTypeParametersOwner, ScTypedDefinition}
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{createBodyFromMember, createNewLineNode, createWhitespace, createWithKeyword}
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createBodyFromMember, createNewLineNode, createWhitespace, createWithKeyword}
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaStubBasedElementImpl
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.synthetic.ScSyntheticClass
 import org.jetbrains.plugins.scala.lang.psi.light.ScFunctionWrapper
@@ -438,9 +438,9 @@ abstract class ScTemplateDefinitionImpl[T <: ScTemplateDefinition] private[impl]
   private def addMemberToEmptyTemplateBody(member: ScMember, projectContext: ProjectContext): ScMember = {
     //when class doesn't yet have body: `class A`
     val extendsBlockNode = extendsBlock.getNode
-    val features: ScalaFeatures = extendsBlockNode.getPsi
+    val creationContext = CreationContext.fromPsi(extendsBlockNode.getPsi)
 
-    if (!projectContext.project.indentationBasedSyntaxEnabled(features)) {
+    if (!projectContext.project.indentationBasedSyntaxEnabled(creationContext.features)) {
       val whitespace = createWhitespace.getNode
       //Add a whitespace before `{` to make it `class B {}` and not `class B{}
       if (extendsBlock.getFirstChild == null) {
@@ -482,7 +482,7 @@ abstract class ScTemplateDefinitionImpl[T <: ScTemplateDefinition] private[impl]
       // given definition does not have a new line inside a template body
       extendsBlockNode.addChild(createWhitespace("\n  ").getNode)
     }
-    val bodyElement = createBodyFromMember(member.getText, isGiven, features)
+    val bodyElement = createBodyFromMember(member.getText, isGiven, creationContext)
     extendsBlockNode.addChild(bodyElement.getNode)
     members.head
   }

@@ -19,7 +19,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.statements.ScFunction
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.ScNamedElement
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScTemplateDefinition}
 import org.jetbrains.plugins.scala.lang.psi.impl.OptionalBracesCode._
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createMethodWithContext
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createMethodWithContext}
 import org.jetbrains.plugins.scala.lang.psi.types.recursiveUpdate.ScSubstitutor
 import org.jetbrains.plugins.scala.lang.psi.types.{PhysicalMethodSignature, ScType, TermSignature}
 import org.jetbrains.plugins.scala.overrideImplement.ScalaOIUtil._
@@ -100,7 +100,8 @@ object ScalaGenerateEqualsAction {
       myHashCodeFields.clear()
     }
 
-    private def createHashCode(aClass: ScClass)(implicit ctx: ProjectContext, features: ScalaFeatures): ScFunction = {
+    private def createHashCode(aClass: ScClass)(implicit ctx: ProjectContext, creationContext: CreationContext): ScFunction = {
+      implicit val features: ScalaFeatures = creationContext.features
       val declText = "def hashCode(): Int"
       val signature = new PhysicalMethodSignature(
         createMethodWithContext(declText + " = 0", aClass, aClass.extendsBlock),
@@ -131,7 +132,8 @@ object ScalaGenerateEqualsAction {
       createMethodWithContext(text, aClass, aClass.extendsBlock)
     }
 
-    private def createEquals(aClass: ScClass)(implicit ctx: ProjectContext, features: ScalaFeatures): ScFunction = {
+    private def createEquals(aClass: ScClass)(implicit ctx: ProjectContext, creationContext: CreationContext): ScFunction = {
+      implicit val features: ScalaFeatures = creationContext.features
       val thatValName = getUniqueLocalVarName("that")
       val otherParamName = getUniqueLocalVarName("other")
       val fieldComparisons = myEqualsFields.map(_.name).map(name => s"$name == $thatValName.$name")
@@ -161,7 +163,7 @@ object ScalaGenerateEqualsAction {
         if (!isOk) return
 
         implicit val projectContext: ProjectContext = project
-        implicit val features: ScalaFeatures = aClass
+        implicit val creationContext: CreationContext = aClass
 
         inWriteAction {
           val needHashCode = hasHashCode(aClass).isEmpty

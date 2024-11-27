@@ -10,7 +10,7 @@ import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.base.literals.ScBooleanLiteral
 import org.jetbrains.plugins.scala.lang.psi.api.base.patterns._
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createElementFromText
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createElementFromText}
 import org.jetbrains.plugins.scala.project.ScalaFeatures
 
 import scala.language.implicitConversions
@@ -49,7 +49,7 @@ object SimpleBooleanMatchUtil {
     }
   }
 
-  def simplifyMatchStmt(stmt: ScMatch)(implicit project: Project, features: ScalaFeatures): ScExpression = {
+  def simplifyMatchStmt(stmt: ScMatch)(implicit project: Project, creationContext: CreationContext): ScExpression = {
     if (!isSimpleBooleanMatchStmt(stmt) || stmt.expression.isEmpty) return stmt
     stmt.clauses.size match {
       case 1 => simplifySingleBranchedStmt(stmt)
@@ -58,7 +58,7 @@ object SimpleBooleanMatchUtil {
     }
   }
 
-  private def simplifySingleBranchedStmt(stmt: ScMatch)(implicit project: Project, features: ScalaFeatures): ScExpression = {
+  private def simplifySingleBranchedStmt(stmt: ScMatch)(implicit project: Project, creationContext: CreationContext): ScExpression = {
     getFirstBooleanClauseAndValue(stmt) match {
       case None => stmt
       case Some((clause, value)) =>
@@ -68,7 +68,7 @@ object SimpleBooleanMatchUtil {
     }
   }
 
-  def simplifyDualBranchedStmt(stmt: ScMatch)(implicit project: Project, features: ScalaFeatures): ScExpression = {
+  def simplifyDualBranchedStmt(stmt: ScMatch)(implicit project: Project, creationContext: CreationContext): ScExpression = {
     getPartitionedClauses(stmt) match {
       case Some((trueClause, falseClause)) if trueClause.expr.nonEmpty && falseClause.expr.nonEmpty =>
         val exprText = stmt.expression.get.getText
@@ -117,7 +117,7 @@ object SimpleBooleanMatchUtil {
     case _ => false
   }
 
-  private val BracedBlockRegex = """(?ms)\{(.+)\}""".r
+  private val BracedBlockRegex = """(?ms)\{(.+)}""".r
 
   private def getTextWithoutBraces(clause: ScCaseClause): String = clause.expr match {
     case Some(block: ScBlock) =>

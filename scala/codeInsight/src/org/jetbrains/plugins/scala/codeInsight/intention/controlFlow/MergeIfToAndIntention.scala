@@ -13,7 +13,7 @@ import org.jetbrains.plugins.scala.codeInsight.ScalaCodeInsightBundle
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createElementFromText
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createElementFromText}
 import org.jetbrains.plugins.scala.project.{ProjectContext, ScalaFeatures}
 
 import scala.collection.mutable
@@ -72,7 +72,7 @@ final class MergeIfToAndIntention extends PsiElementBaseIntentionAction with Dum
 
     IntentionPreviewUtils.write { () =>
       implicit val ctx: ProjectContext = project
-      implicit val features: ScalaFeatures = element
+      implicit val creationContext: CreationContext = element
       val newIf = ScalaPsiUtil.convertIfToBracelessIfNeeded(createElementFromText[ScIf](expr.toString(), element), recursive = true)
       ifStmt.replaceExpression(newIf, removeParenthesis = true)
       PsiDocumentManager.getInstance(project).commitDocument(editor.getDocument)

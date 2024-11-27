@@ -8,14 +8,14 @@ import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil.convertBlockToBraceless
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaPsiElement
 import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScBlockExpr, ScCatchBlock, ScFinallyBlock, ScFor, ScIf, ScMatch, ScWhile}
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{createExpressionFromText, createWhitespace}
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createExpressionFromText, createWhitespace}
 import org.jetbrains.plugins.scala.project.{ProjectContext, ProjectExt, ScalaFeatures}
 
 package object expression {
 
   private[scala] implicit class ScalaPsiElementExt[E <: ScalaPsiElement](private val element: E) extends AnyVal {
     def toIndentationBasedSyntax(implicit ctx: ProjectContext = element.projectContext,
-                                 features: ScalaFeatures = element): E = inWriteCommandActionIf(element.isPhysical) {
+                                 creationContext: CreationContext = CreationContext.fromPsi(element)): E = inWriteCommandActionIf(element.isPhysical) {
       val withNewSyntax = Rewriters.rewriteToNewSyntax(element)
       val withIndentationBasedSyntax = Rewriters.rewriteToIndentationBasedSyntax(withNewSyntax)
 
@@ -23,7 +23,7 @@ package object expression {
     }(ctx.project)
 
     def toNewSyntax(implicit ctx: ProjectContext = element.projectContext,
-                    features: ScalaFeatures = element): E =
+                    creationContext: CreationContext = CreationContext.fromPsi(element)): E =
       inWriteCommandActionIf(element.isPhysical)(Rewriters.rewriteToNewSyntax(element))(ctx.project)
 
     private[expression] def forcePostprocessAndRestore: Option[PsiElement] =
@@ -39,8 +39,8 @@ package object expression {
     }
 
     def rewriteToNewSyntax[E <: ScalaPsiElement](element: E)
-                                                (implicit ctx: ProjectContext, features: ScalaFeatures): E =
-      if (!ctx.project.indentationBasedSyntaxEnabled(features)) element
+                                                (implicit ctx: ProjectContext, creationContext: CreationContext): E =
+      if (!ctx.project.indentationBasedSyntaxEnabled(creationContext.features)) element
       else element match {
         case ifStmt: ScIf if ifStmt.thenKeyword.isEmpty =>
           convertToBraceless(ifStmt)(_.leftParen, _.rightParen, _.thenKeyword, "if true then ()").asInstanceOf[E]
@@ -52,8 +52,8 @@ package object expression {
       }
 
     def rewriteToIndentationBasedSyntax[E <: ScalaPsiElement](element: E)
-                                                             (implicit ctx: ProjectContext, features: ScalaFeatures): E =
-      if (!ctx.project.indentationBasedSyntaxEnabled(features)) element
+                                                             (implicit ctx: ProjectContext, creationContext: CreationContext): E =
+      if (!ctx.project.indentationBasedSyntaxEnabled(creationContext.features)) element
       else {
         CodeStyleManager.getInstance(ctx.project).reformat(element, true)
 
@@ -90,17 +90,18 @@ package object expression {
         element
       }
 
-    private[this] def convertToBraceless[E <: ScalaPsiElement](element: E)(leftParenOrBrace: E => Option[PsiElement],
-                                                                           rightParenOrBrace: E => Option[PsiElement],
-                                                                           keyword: E => Option[PsiElement],
-                                                                           templateWithKeyword: String)
-                                                              (implicit ctx: ProjectContext, features: ScalaFeatures): E = {
+    private[this] def convertToBraceless[E <: ScalaPsiElement](element: E)
+                                                              (leftParenOrBrace: E => Option[PsiElement],
+                                                               rightParenOrBrace: E => Option[PsiElement],
+                                                               keyword: E => Option[PsiElement],
+                                                               templateWithKeyword: String)
+                                                              (implicit ctx: ProjectContext, creationContext: CreationContext): E = {
       leftParenOrBrace(element).foreach(_.delete())
       rightParenOrBrace(element).foreach { rParenOrBrace =>
         keyword(element) match {
           case Some(_) =>
           case _ =>
-            val dummyExpr = createExpressionFromText(templateWithKeyword, features).asInstanceOf[E]
+            val dummyExpr = createExpressionFromText(templateWithKeyword, creationContext).asInstanceOf[E]
             keyword(dummyExpr)
               .foreach(kw => addKeyword(statement = element, keyword = kw, anchor = rParenOrBrace))
         }

@@ -6,6 +6,7 @@ import org.jetbrains.plugins.scala.codeInsight.ScalaCodeInsightBundle
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScParameter, ScParameterClause, ScParameters}
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.CreationContext
 import org.jetbrains.plugins.scala.project.{ProjectContext, ScalaFeatures}
 
 sealed abstract class ScalaPrimaryConstructorMacro extends ScalaMacro {
@@ -84,13 +85,13 @@ object ScalaPrimaryConstructorMacro {
     private def createScParametersFromText(paramsText: String, context: ExpressionContext): Option[ScParameters] = {
       implicit def projectContext: ProjectContext = context.getProject
 
-      val features =
+      val creationContext =
         context
         .getPsiElementAtStartOffset
         .toOption
-        .fold(ScalaFeatures.default: ScalaFeatures)(ScalaFeatures.forPsiOrDefault)
+        .fold(CreationContext.default)(CreationContext.fromPsi)
 
-      Option(ScalaPsiElementFactory.createScalaFileFromText(s"def foo$paramsText: Unit = ???", features))
+      Option(ScalaPsiElementFactory.createScalaFileFromText(s"def foo$paramsText: Unit = ???", creationContext))
         .flatMap(file => Option(PsiTreeUtil.findChildOfType(file, classOf[ScParameters])))
     }
 

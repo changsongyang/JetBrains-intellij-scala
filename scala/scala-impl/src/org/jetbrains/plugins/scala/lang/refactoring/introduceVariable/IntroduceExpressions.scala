@@ -362,7 +362,7 @@ object IntroduceExpressions {
 
     // wrap expression in parentheses to avoid parsing errors (SCL-20916)
     val parenthesisedExpr = wrapInParentheses(expression)
-    val features: ScalaFeatures = expression
+    val creationContext = CreationContext.fromPsi(expression)
 
     def createForBindingIn(forStmt: ScFor): ScForBinding = {
       val parent: ScEnumerators = forStmt.enumerators.orNull
@@ -395,7 +395,7 @@ object IntroduceExpressions {
 
     def createVariableDefinition(): PsiElement = {
       if (fastDefinition) {
-        val declaration = createDeclaration(varName, typeTextIfNeeded(firstElement), isVariable, parenthesisedExpr, features)
+        val declaration = createDeclaration(varName, typeTextIfNeeded(firstElement), isVariable, parenthesisedExpr, creationContext)
         replaceRangeByDeclaration(declaration.getText, firstRange)(declaration.getProject, editor)
 
         val start = firstRange.getStartOffset
@@ -418,7 +418,7 @@ object IntroduceExpressions {
             val needBraces = !commonParent.isInstanceOf[ScBlock] && ScalaRefactoringUtil.needBraces(commonParent, nextParentInFile)
             if (needBraces) {
               firstRange = firstRange.shiftRight(1)
-              val replaced = commonParent.replace(createExpressionFromText("{" + commonParent.getText + "}", features))
+              val replaced = commonParent.replace(createExpressionFromText("{" + commonParent.getText + "}", creationContext))
               replaced.getPrevSibling match {
                 case ws: PsiWhiteSpace if ws.getText.contains("\n") =>
                   firstRange = firstRange.shiftLeft(ws.getTextLength)
@@ -432,7 +432,7 @@ object IntroduceExpressions {
         }
         val anchor = parent.getChildren.find(_.getTextRange.contains(firstRange)).getOrElse(parent.getLastChild)
         if (anchor != null) {
-          val created = createDeclaration(varName, typeTextIfNeeded(anchor), isVariable, parenthesisedExpr, features)
+          val created = createDeclaration(varName, typeTextIfNeeded(anchor), isVariable, parenthesisedExpr, creationContext)
           val result = ScalaPsiUtil.addStatementBefore(created.asInstanceOf[ScBlockStatement], parent, Some(anchor))
           CodeEditUtil.markToReformat(parent.getNode, needFormatting)
           result

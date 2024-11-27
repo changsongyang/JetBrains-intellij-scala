@@ -50,7 +50,7 @@ object ScalaOIUtil {
         needsOverrideModifier = false,
         isVal = true,
         clazz = parameter.containingClass,
-        features = tdContext
+        creationContext = tdContext
       ).asInstanceOf[ScValue]
 
       member.context = tdContext

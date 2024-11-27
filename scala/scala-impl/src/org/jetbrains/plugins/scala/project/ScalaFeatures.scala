@@ -26,8 +26,6 @@ import scala.language.implicitConversions
  * @todo refactor (see SCL-23158)
  */
 trait ScalaFeatures extends Any {
-  def psiContext: Option[PsiElement]
-
   def languageLevel: ScalaLanguageLevel
   def isScala3: Boolean = languageLevel.isScala3
   def isSource3: Boolean
@@ -60,8 +58,6 @@ trait ScalaFeatures extends Any {
 object ScalaFeatures {
   // TODO: this will be refactored in 213.x
   final class SerializableScalaFeatures private[ScalaFeatures](private val bits: Int) extends AnyVal with ScalaFeatures {
-    override def psiContext: Option[PsiElement] = None
-
     @inline
     private def `in >= 2.12.14 or 2.13.6 with -XSource:3 or 3`: Boolean =
       Bits.`in >= 2.12.14 or 2.13.6 with -XSource:3 or 3`.read(bits)
@@ -151,33 +147,6 @@ object ScalaFeatures {
     def serializeToInt: Int = bits
   }
 
-  final case class PsiContextFeatures(@Nullable psi: PsiElement, delegate: ScalaFeatures) extends ScalaFeatures {
-    override val psiContext: Option[PsiElement] = Option(psi)
-
-    override def languageLevel: ScalaLanguageLevel               = delegate.languageLevel
-    override def isSource3: Boolean                              = delegate.isSource3
-    override def isSource3UnicodeEscapesRaw: Boolean             = delegate.isSource3UnicodeEscapesRaw
-    override def hasMetaEnabled: Boolean                         = delegate.hasMetaEnabled
-    override def hasTrailingCommasEnabled: Boolean               = delegate.hasTrailingCommasEnabled
-    override def hasUnderscoreWildcardsDisabled: Boolean         = delegate.hasUnderscoreWildcardsDisabled
-    override def indentationBasedSyntaxEnabled: Boolean          = delegate.indentationBasedSyntaxEnabled
-    override def warnAboutDeprecatedInfixCallsEnabled: Boolean   = delegate.warnAboutDeprecatedInfixCallsEnabled
-    override def `& instead of with`: Boolean                    = delegate.`& instead of with`
-    override def `Scala 3 vararg splice syntax`: Boolean         = delegate.`Scala 3 vararg splice syntax`
-    override def `Scala 3 wildcard imports`: Boolean             = delegate.`Scala 3 wildcard imports`
-    override def `Scala 3 wildcard imports in selector`: Boolean = delegate.`Scala 3 wildcard imports in selector`
-    override def `Scala 3 renaming imports`: Boolean             = delegate.`Scala 3 renaming imports`
-    override def `soft keywords open and infix`: Boolean         = delegate.`soft keywords open and infix`
-    override def `leading infix operator`: Boolean               = delegate.`leading infix operator`
-    override def `? as wildcard marker`: Boolean                 = delegate.`? as wildcard marker`
-    override def `case in pattern bindings`: Boolean             = delegate.`case in pattern bindings`
-    override def usingInArgumentsEnabled: Boolean                = delegate.usingInArgumentsEnabled
-    override def noUnicodeEscapesInRawStrings: Boolean           = delegate.noUnicodeEscapesInRawStrings
-    override def `optional braces for method arguments`: Boolean = delegate.`optional braces for method arguments`
-    override def `named tuples`: Boolean                         = delegate.`named tuples`
-    override def `new context bounds and givens`: Boolean        = delegate.`named tuples`
-  }
-
   private val minorVersion6  = Version("6")
   private val minorVersion9  = Version("9")
   private val minorVersion12 = Version("12")
@@ -249,8 +218,9 @@ object ScalaFeatures {
     )
   }
 
-  val default: SerializableScalaFeatures = onlyByVersion(ScalaVersion.Latest.Scala_2_13)
+  val defaultScala2: SerializableScalaFeatures = onlyByVersion(ScalaVersion.Latest.Scala_2_13)
   val defaultScala3: SerializableScalaFeatures = onlyByVersion(ScalaVersion.Latest.Scala_3)
+  val default: SerializableScalaFeatures = defaultScala2
 
   val `-Xsource:3 in 2.12.14 or 2.13.6`: SerializableScalaFeatures = default.copy(
     version = ScalaVersion.Latest.Scala_2_13.withMinor(6),
@@ -284,7 +254,7 @@ object ScalaFeatures {
   def setAttachedScalaFeatures(file: PsiFile, features: ScalaFeatures): Unit =
     file.putUserData(CreatedWithScalaFeatures, features)
 
-  private def forPsi(psi: PsiElement): Option[ScalaFeatures] = {
+  def forPsi(psi: PsiElement): Option[ScalaFeatures] = {
     val containingFile = Option(psi.getContainingFile)
     containingFile.map(forFile)
   }
@@ -311,13 +281,9 @@ object ScalaFeatures {
     result
   }
 
-  implicit def forPsiOrDefault(@Nullable psi: PsiElement): ScalaFeatures = {
-    val delegate =
-      if (psi eq null) ScalaFeatures.default
-      else             forPsi(psi).getOrElse(default)
-
-    PsiContextFeatures(psi, delegate)
-  }
+  def forPsiOrDefault(@Nullable psi: PsiElement): ScalaFeatures =
+    if (psi eq null) ScalaFeatures.default
+    else             forPsi(psi).getOrElse(default)
 
   def forParserTests(version: ScalaVersion): ScalaFeatures =
     default.copy(

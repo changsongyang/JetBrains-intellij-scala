@@ -13,7 +13,7 @@ import org.jetbrains.plugins.scala.codeInsight.ScalaCodeInsightBundle
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScExpression, ScIf, ScInfixExpr, ScParenthesisedExpr}
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createElementFromText
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createElementFromText}
 import org.jetbrains.plugins.scala.project.ScalaFeatures
 
 final class SplitIfIntention extends PsiElementBaseIntentionAction with DumbAware {
@@ -50,7 +50,7 @@ final class SplitIfIntention extends PsiElementBaseIntentionAction with DumbAwar
     }
 
     import ifStmt.projectContext
-    implicit val features: ScalaFeatures = element
+    implicit val creationContext: CreationContext = element
     val start = ifStmt.getTextRange.getStartOffset
     val newIfStmt = ScalaPsiUtil.convertIfToBracelessIfNeeded(createElementFromText[ScIf](prefix + suffix, element), recursive = true)
     val diff = newIfStmt.condition.get.getTextRange.getStartOffset - newIfStmt.getTextRange.getStartOffset

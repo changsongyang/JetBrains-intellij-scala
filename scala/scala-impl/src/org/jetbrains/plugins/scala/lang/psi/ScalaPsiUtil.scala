@@ -1893,14 +1893,14 @@ object ScalaPsiUtil {
    *
    * Doesn't modify given statement, returns a modified copy.
    */
-  def convertIfToBracelessIfNeeded(ifStmt: ScIf, recursive: Boolean)(implicit ctx: ProjectContext, features: ScalaFeatures): ScIf = {
-    if (!ctx.project.indentationBasedSyntaxEnabled(features)) return ifStmt
+  def convertIfToBracelessIfNeeded(ifStmt: ScIf, recursive: Boolean)(implicit ctx: ProjectContext, creationContext: CreationContext): ScIf = {
+    if (!ctx.project.indentationBasedSyntaxEnabled(creationContext.features)) return ifStmt
 
     val statement = ifStmt.copy().asInstanceOf[ScIf]
     CodeStyleManager.getInstance(ctx.project).reformat(statement, true)
 
     def addThenKw(anchor: PsiElement): Unit =
-      createExpressionFromText("if true then ()", features)
+      createExpressionFromText("if true then ()", creationContext)
         .findFirstChildByType(ScalaTokenType.ThenKeyword)
         .foreach { thenKw =>
           val addedThen = statement.addAfter(thenKw, anchor)

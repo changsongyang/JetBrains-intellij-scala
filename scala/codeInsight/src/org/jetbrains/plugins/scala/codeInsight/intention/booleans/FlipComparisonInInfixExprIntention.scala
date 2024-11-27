@@ -13,7 +13,7 @@ import org.jetbrains.plugins.scala.codeInsight.ScalaCodeInsightBundle
 import org.jetbrains.plugins.scala.extensions.ParenthesizedElement.Ops
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createExpressionFromText
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createExpressionFromText}
 import org.jetbrains.plugins.scala.project.{ProjectContext, ScalaFeatures}
 
 import scala.util.chaining.scalaUtilChainingOps
@@ -81,9 +81,9 @@ object FlipComparisonInInfixExprIntention {
   )
 
   private def createFlippedInfixExpr(baseText: String, operation: ScReferenceExpression, argumentText: String)
-                                    (features: ScalaFeatures)
+                                    (creationContext: CreationContext)
                                     (implicit ctx: ProjectContext): ScInfixExpr =
-    createExpressionFromText(s"($argumentText) ${Replacement(operation.refName)} ($baseText)", features)
+    createExpressionFromText(s"($argumentText) ${Replacement(operation.refName)} ($baseText)", creationContext)
       .asInstanceOf[ScInfixExpr]
       .tap { infix =>
         stripUnnecessaryParentheses(infix.left)

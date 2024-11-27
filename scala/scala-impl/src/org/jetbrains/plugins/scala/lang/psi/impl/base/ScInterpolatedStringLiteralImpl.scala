@@ -108,7 +108,7 @@ final class ScInterpolatedStringLiteralImpl(node: ASTNode,
       new ScLiteralEscaper(this)
 
   override def updateText(text: String): ScStringLiteralImpl = try {
-    val newStringLiteral = ScalaPsiElementFactory.createStringLiteralFromText(text, this.features).asInstanceOf[ScStringLiteralImpl]
+    val newStringLiteral = ScalaPsiElementFactory.createStringLiteralFromText(text, this).asInstanceOf[ScStringLiteralImpl]
     getParent.getNode.replaceChild(getNode, newStringLiteral.getNode)
     newStringLiteral
   } catch {

@@ -18,7 +18,7 @@ class ConstructorCallArgumentPattern(
 
   override def accepts(host: ScalaPsiElement, context: ProcessingContext): Boolean = {
     val constrPattern: PsiMethodPattern = if (host.newCollectionsFramework) constrPattern1 else constrPattern2
-    ScalaElementPatternImpl.isConstructorCallArgument(host, context, index, constrPattern, host.isScala3)
+    ScalaElementPatternImpl.isConstructorCallArgument(host, context, index, constrPattern, host.isInScala3Module)
   }
 
   private def constructorPattern(useNewCollectionFramework: Boolean): PsiMethodPattern = {

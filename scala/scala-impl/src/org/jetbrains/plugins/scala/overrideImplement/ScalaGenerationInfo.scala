@@ -262,7 +262,7 @@ object ScalaGenerationInfo {
 
     val newExtension = createOverrideImplementExtensionMethods(
       extensionMethodConstructionInfos,
-      ScalaFeatures.forPsiOrDefault(td),
+      CreationContext.fromPsi(td),
       wrapMultipleExtensionsWithBraces = !td.containingFile.exists(_.useIndentationBasedSyntax),
       withComment = ScalaApplicationSettings.getInstance().COPY_SCALADOC,
     )(extension.getManager)

@@ -14,6 +14,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.base.{ScReference, ScStableCodeR
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScThisReference
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScParameter
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.CreationContext
 import org.jetbrains.plugins.scala.project.{ModuleExt, ProjectPsiElementExt, ScalaFeatures}
 import org.jetbrains.plugins.scala.settings.ScalaApplicationSettings.{getInstance => ScalaApplicationSettings}
 import org.jetbrains.plugins.scala.text.ClassPrinter
@@ -31,7 +32,7 @@ object ElementRenderer {
     } finally {
       ScalaApplicationSettings.PRECISE_TEXT = false
     }
-    val file = ScalaPsiElementFactory.createScalaFileFromText(text, e.module.map(_.features).getOrElse(ScalaFeatures.default))(e.getProject)
+    val file = ScalaPsiElementFactory.createScalaFileFromText(text, CreationContext.maybeFromScalaFeatures(e.module.map(_.features)))(e.getProject)
     file.children.foreach(_.asInstanceOf[ScalaPsiElement].context = context)
 
     val highlighted = highlight(file, EditorColorsManager.getInstance.getGlobalScheme)

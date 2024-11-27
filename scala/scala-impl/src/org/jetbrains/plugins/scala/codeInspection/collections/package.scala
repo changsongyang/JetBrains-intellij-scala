@@ -16,6 +16,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScParameter
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFunction, ScFunctionDefinition, ScTypeAlias, ScValue, ScVariable}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScMember, ScObject}
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.CreationContext
 import org.jetbrains.plugins.scala.lang.psi.types.api.designator.ScDesignatorType
 import org.jetbrains.plugins.scala.lang.psi.types.api.{FunctionType, JavaArrayType, PartialFunctionType, PsiTypeConstants}
 import org.jetbrains.plugins.scala.lang.psi.types.result._
@@ -243,7 +244,7 @@ package object collections {
           }
         case ScInfixExpr(underscore(), oper, underscore()) if oper.refName == "&&" =>
           val identityElement =
-            ScalaPsiElementFactory.createExpressionFromText("identity", ScalaFeatures.default)(expr.getProject)
+            ScalaPsiElementFactory.createExpressionFromText("identity", CreationContext.default)(expr.getProject)
           Some(identityElement)
         case ScInfixExpr(underscore(), oper, right) if oper.refName == "&&" => Some(right)
         case _ => None

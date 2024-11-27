@@ -19,7 +19,6 @@ import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createId
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.ScTopLevelStubBasedElement
 import org.jetbrains.plugins.scala.lang.psi.impl.{ScalaPsiElementFactory, ScalaStubBasedElementImpl}
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScTypeAliasStub
-import org.jetbrains.plugins.scala.project.ScalaFeatures.forPsiOrDefault
 import org.jetbrains.plugins.scala.text.ClassPrinter
 
 import javax.swing.Icon
@@ -91,7 +90,7 @@ final class ScTypeAliasDefinitionImpl private(stub: ScTypeAliasStub, node: ASTNo
   override def isEffectivelyFinal: Boolean = true
 
   override def toDeclaration: ScTypeAliasDeclaration = cachedInUserData("toDeclaration", this, BlockModificationTracker(this)) {
-    val text = new ClassPrinter(this.isScala3, extendsSeparator = " ").declarationOf(this)
+    val text = new ClassPrinter(this.isInScala3Module, extendsSeparator = " ").declarationOf(this)
     ScalaPsiElementFactory.createTypeAliasDeclarationFromText(text, getContext, null)
   }
 }

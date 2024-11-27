@@ -1,5 +1,6 @@
 package org.jetbrains.plugins.scala.lang.psi.impl
 
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.CreationContext
 import org.jetbrains.plugins.scala.project.{ProjectContext, ProjectExt, ScalaFeatures}
 
 /**
@@ -30,9 +31,8 @@ object OptionalBracesCode {
   case object BlockStart
   case object BlockEnd extends BlockEndLike
 
-  implicit final class ScalaOptionalBracesCodeContext(delegate: StringContext)
-                                                     (implicit ctx: ProjectContext, features: ScalaFeatures) {
-    def optBraces(args0: Any*): String = {
+  implicit final class ScalaOptionalBracesCodeContext(delegate: StringContext) {
+    def optBraces(args0: Any*)(implicit ctx: ProjectContext, features: ScalaFeatures): String = {
       val parts = delegate.parts.iterator
       val args  = args0.iterator
 

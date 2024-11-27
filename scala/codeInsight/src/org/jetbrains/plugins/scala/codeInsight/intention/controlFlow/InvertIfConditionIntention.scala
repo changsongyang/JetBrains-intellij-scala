@@ -13,7 +13,7 @@ import org.jetbrains.plugins.scala.codeInsight.ScalaCodeInsightBundle
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScBlockExpr, ScExpression, ScIf, ScInfixExpr}
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createElementFromText
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createElementFromText}
 import org.jetbrains.plugins.scala.project.{ProjectContext, ScalaFeatures}
 
 final class InvertIfConditionIntention extends PsiElementBaseIntentionAction with DumbAware {
@@ -47,7 +47,7 @@ final class InvertIfConditionIntention extends PsiElementBaseIntentionAction wit
     if (ifStmt == null || !ifStmt.isValid) return
 
     implicit val ctx: ProjectContext = element.getManager
-    implicit val features: ScalaFeatures = element
+    implicit val creationContext: CreationContext = element
 
     val condition = ifStmt.condition.orNull
     val thenExpression = ifStmt.thenExpression.orNull
@@ -84,7 +84,7 @@ final class InvertIfConditionIntention extends PsiElementBaseIntentionAction wit
     val oldCaretWasOnElse = isCaretOnElse(thenExpression, elseExpression, caretModel.getOffset)
 
     IntentionPreviewUtils.write { () =>
-      val newIfStmtDummy = ScalaPsiUtil.convertIfToBracelessIfNeeded(createElementFromText[ScIf](newIfElseText, features), recursive = true)
+      val newIfStmtDummy = ScalaPsiUtil.convertIfToBracelessIfNeeded(createElementFromText[ScIf](newIfElseText, creationContext), recursive = true)
       val newIfStmt = ifStmt.replaceExpression(newIfStmtDummy, removeParenthesis = true)
       PsiDocumentManager.getInstance(project).commitDocument(editor.getDocument)
 

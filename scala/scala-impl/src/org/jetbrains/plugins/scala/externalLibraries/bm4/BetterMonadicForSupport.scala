@@ -3,7 +3,7 @@ package org.jetbrains.plugins.scala.externalLibraries.bm4
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
-import org.jetbrains.plugins.scala.project.ScalaFeatures
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.CreationContext
 
 /**
   * See: https://github.com/oleg-py/better-monadic-for
@@ -18,7 +18,7 @@ class BetterMonadicForSupport(project: Project) {
     """.stripMargin
 
 
-    val file = ScalaPsiElementFactory.createScalaFileFromText(text, ScalaFeatures.default)(project)
+    val file = ScalaPsiElementFactory.createScalaFileFromText(text, CreationContext.default)(project)
     file.typeDefinitions.head
   }
 

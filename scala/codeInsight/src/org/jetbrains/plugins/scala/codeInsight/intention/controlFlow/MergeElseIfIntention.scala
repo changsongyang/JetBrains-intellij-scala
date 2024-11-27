@@ -13,7 +13,7 @@ import org.jetbrains.plugins.scala.codeInsight.ScalaCodeInsightBundle
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createElementFromText
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{CreationContext, createElementFromText}
 import org.jetbrains.plugins.scala.project.{ProjectContext, ScalaFeatures}
 
 import scala.collection.mutable
@@ -58,8 +58,8 @@ final class MergeElseIfIntention extends PsiElementBaseIntentionAction with Dumb
       .append(ifStmt.elseExpression.get.getText.trim.drop(1).dropRight(1))
 
     implicit val ctx: ProjectContext = element.getManager
-    implicit val features: ScalaFeatures = element
-    val newIfStmt = ScalaPsiUtil.convertIfToBracelessIfNeeded(createElementFromText[ScIf](expr.toString(), features), recursive = true)
+    implicit val creationContext: CreationContext = element
+    val newIfStmt = ScalaPsiUtil.convertIfToBracelessIfNeeded(createElementFromText[ScIf](expr.toString(), creationContext), recursive = true)
     val newElseOffset = ifStmt.getTextOffset + newIfStmt.elseKeyword.get.getStartOffsetInParent
 
     IntentionPreviewUtils.write { () =>
