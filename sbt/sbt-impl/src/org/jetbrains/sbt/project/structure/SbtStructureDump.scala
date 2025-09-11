@@ -1,8 +1,6 @@
 package org.jetbrains.sbt.project.structure
 
 import com.intellij.build.events.impl.{FailureResultImpl, SkippedResultImpl, SuccessResultImpl}
-import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.configurations.GeneralCommandLine.ParentEnvironmentType
 import com.intellij.execution.process.OSProcessHandler
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
@@ -14,13 +12,14 @@ import org.jetbrains.annotations.{Nls, NonNls, Nullable}
 import org.jetbrains.plugins.scala.build.BuildMessages.EventId
 import org.jetbrains.plugins.scala.build.{BuildMessages, BuildReporter, ExternalSystemNotificationReporter}
 import org.jetbrains.plugins.scala.extensions.LoggerExt
+import org.jetbrains.plugins.scala.kotlin.util.EelUtil
 import org.jetbrains.sbt.SbtUtil.normalizePath
 import org.jetbrains.sbt.actions.GenerateManagedSourcesReporter
 import org.jetbrains.sbt.project.SbtProjectResolver.ImportCancelledException
 import org.jetbrains.sbt.project.structure.SbtOption._
 import org.jetbrains.sbt.project.structure.SbtStructureDump._
-import org.jetbrains.sbt.shell.{SbtProcessManager, SbtShellCommunication}
 import org.jetbrains.sbt.shell.SbtShellCommunication._
+import org.jetbrains.sbt.shell.{SbtProcessManager, SbtShellCommunication}
 import org.jetbrains.sbt.{SbtBundle, SbtUtil, SbtVersion, SbtVersionCapabilities}
 
 import java.io.{BufferedWriter, File, OutputStreamWriter, PrintWriter}
@@ -240,22 +239,14 @@ class SbtStructureDump {
     reporter.startTask(dumpTaskId, None, reportMessage, startTime)
 
     val resultMessages = Try {
-      val parentEnvironmentType = if (passParentEnvironment) GeneralCommandLine.ParentEnvironmentType.CONSOLE else ParentEnvironmentType.NONE
-      val generalCommandLine = new GeneralCommandLine(processCommands.asJava)
-        .withParentEnvironmentType(parentEnvironmentType)
-      val processBuilder = generalCommandLine.toProcessBuilder
-      processBuilder.directory(directory)
-      processBuilder.environment().putAll(environment.asJava)
-      // It is required due to #SCL-19498
-      processBuilder.environment().put("HISTCONTROL", "ignorespace")
-      val procString = processBuilder.command().asScala.mkString(" ")
-      reporter.log(procString)
-
-      Log.debugSafe(
-        s"""processBuilder.start()
-           |  command line: ${processBuilder.command().asScala.mkString(" ")}""".stripMargin
+      val fullEnv = environment ++ Map("HISTCONTROL" -> "ignorespace")
+      EelUtil.runProcess(
+        vmExecutable,
+        directory,
+        passParentEnvironment,
+        fullEnv.asJava,
+        processCommands.asJava
       )
-      processBuilder.start()
     }
       .flatMap { process =>
         Using.resource(new PrintWriter(new BufferedWriter(new OutputStreamWriter(process.getOutputStream, "UTF-8")))) { writer =>

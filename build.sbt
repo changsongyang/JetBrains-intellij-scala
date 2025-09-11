@@ -374,6 +374,7 @@ lazy val sbtImpl =
   newProject("sbt-impl", file("sbt/sbt-impl"))
     .dependsOn(
       sbtApi,
+      kotlinUtils,
       scalaImpl % "test->test;compile->compile",
     )
     .settings(
