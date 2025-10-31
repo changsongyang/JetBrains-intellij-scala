@@ -97,8 +97,8 @@ object SbtData {
       Jars(sbtInterfaceJar, compilerInterfaceJar, compilerBridges) = Jars.fromPluginJpsDirectory(sbtHome)
       sbtVersion <- readSbtVersionFrom(sbtInterfaceJar)
     } yield {
-      val checksum = encodeHex(md5(compilerBridges.scala._2_10))
-      val interfacesHome = compilerInterfacesDir(systemRootDir).resolve(sbtVersion + "-idea-" + checksum)
+//      val checksum = encodeHex(md5(compilerBridges.scala._2_10))
+      val interfacesHome = compilerInterfacesDir(systemRootDir).resolve(sbtVersion + "-idea-" + "mychecksum")
       SbtData(sbtInterfaceJar, compilerInterfaceJar, compilerBridges, interfacesHome, javaClassVersion)
     }
 

@@ -212,21 +212,22 @@ class SbtProjectResolver extends ExternalSystemProjectResolver[SbtExecutionSetti
 
           log.debug(s"sbtStructureJar: $sbtStructureJar")
           // TODO add error/warning messages during dump, report directly
-          dumper.dumpFromProcess(
-            indicator,
-            projectRoot,
-            structureFilePath,
-            options,
-            settings.vmExecutable.toPath,
-            settings.vmOptions,
-            settings.sbtOptions,
-            settings.userSetEnvironment,
-            sbtLauncher,
-            sbtStructureJar,
-            settings.preferScala2,
-            settings.passParentEnvironment,
-            settings.generateManagedSourcesDuringProjectSync
-          )
+          Try(BuildMessages.empty)
+//          dumper.dumpFromProcess(
+//            indicator,
+//            projectRoot,
+//            structureFilePath,
+//            options,
+//            settings.vmExecutable.toPath,
+//            settings.vmOptions,
+//            settings.sbtOptions,
+//            settings.userSetEnvironment,
+//            sbtLauncher,
+//            sbtStructureJar,
+//            settings.preferScala2,
+//            settings.passParentEnvironment,
+//            settings.generateManagedSourcesDuringProjectSync
+//          )
         }
       }
       activeProcessDumper = None
@@ -291,12 +292,14 @@ class SbtProjectResolver extends ExternalSystemProjectResolver[SbtExecutionSetti
       val structureFilePath = getStructureFilePath(projectRoot)
       val StructureFileReuseMode(readStructureFile, writeStructureFile) = getStructureFileReuseMode
 
-      if (readStructureFile && structureFilePath.exists) {
-        val reuseWarning = s"sbt reload skipped: using existing structure file: $structureFilePath"
-        log.warn(reuseWarning)
+      if (true) {
+//        val reuseWarning = s"sbt reload skipped: using existing structure file: $structureFilePath"
+//        log.warn(reuseWarning)
         //noinspection ReferencePassedToNls (this branch is only triggered when registry was explicitly modified, so it's not i18-ed)
-        reporter.log(reuseWarning)
-        val elem = XML.load(structureFilePath.toUri.toURL)
+//        reporter.log(reuseWarning)
+        val structureXml = projectRoot / "structure.xml"
+        println(structureXml.toCanonicalPath.toString)
+        val elem = XML.load(structureXml.toUri.toURL)
         Try((elem, BuildMessages.empty))
       } else if (writeStructureFile) {
         log.warn(s"reused structure file created: $structureFilePath")
