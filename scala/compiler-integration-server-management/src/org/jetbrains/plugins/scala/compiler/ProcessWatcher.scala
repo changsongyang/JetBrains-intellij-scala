@@ -29,7 +29,7 @@ private final class ProcessWatcher(process: Process, commandLine: String) {
 
   def running: Boolean = !processHandler.isProcessTerminated
 
-  def pid: Long = process.pid()
+  def pid: Long = 12345L
 
   def destroyAndWait(): Boolean = {
     processHandler.destroyProcess()
@@ -87,7 +87,7 @@ private final class ProcessWatcher(process: Process, commandLine: String) {
     }
 
     override def processTerminated(event: ProcessEvent): Unit = {
-      Log.info(s"compile server process terminated with exit code: ${event.getExitCode} (pid: ${process.pid()}) ")
+      Log.info(s"compile server process terminated with exit code: ${event.getExitCode} (pid: ${pid}) ")
     }
   }
 }

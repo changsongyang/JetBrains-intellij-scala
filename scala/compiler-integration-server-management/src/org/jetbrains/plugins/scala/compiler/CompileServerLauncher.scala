@@ -10,7 +10,8 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.advanced.AdvancedSettings
 import com.intellij.openapi.project.{Project, ProjectManager}
 import com.intellij.openapi.projectRoots.{JavaSdkVersion, ProjectJdkTable, Sdk}
-import com.intellij.platform.eel.provider.EelProviderUtil
+import com.intellij.platform.eel.EelPlatformKt
+import com.intellij.platform.eel.provider.{EelNioBridgeServiceKt, EelProviderUtil}
 import com.intellij.platform.eel.provider.utils.EelPathUtils
 import com.intellij.platform.eel.provider.utils.EelPathUtils.TransferTarget
 import com.intellij.util.PathUtil
@@ -115,12 +116,16 @@ object CompileServerLauncher {
     settings.COMPILE_SERVER_SDK = jdk.name
     saveSettings()
 
-    val preparedCompileServerJars = prepareCompileServerJars(compileServerJars)
+    val preparedCompileServerJars = prepareCompileServerJars(compileServerJars, project)
     preparedCompileServerJars.partition(_.exists) match {
       case (presentFiles, Seq()) =>
         val (nailgunCpFiles, classpathFiles) = presentFiles.partition(_.nameContains("nailgun"))
+
+        val descriptor = EelProviderUtil.getEelDescriptor(project)
+        val pathSeparator = EelPlatformKt.getPathSeparator(descriptor.getOsFamily)
+
         val nailgunClasspath = nailgunCpFiles
-          .map(_.toCanonicalPath.toString).mkString(java.io.File.pathSeparator)
+          .map(path => EelNioBridgeServiceKt.asEelPath(path, descriptor).toString).mkString(pathSeparator)
         val buildProcessClasspath = {
           //noinspection ApiStatus
           // in worksheet tests we reuse compile server between projects
@@ -129,11 +134,17 @@ object CompileServerLauncher {
           val pluginsClasspath = if (isUnitTestMode && (project eq null) || project.isDisposed) Seq() else
             new BuildProcessClasspathManager(project.unloadAwareDisposable).getBuildProcessPluginsClasspath(project).asScala.toSeq
           val applicationClasspath = ClasspathBootstrap.getBuildProcessApplicationClasspath.asScala
-          pluginsClasspath ++ applicationClasspath
+          val raw = pluginsClasspath ++ applicationClasspath
+          raw.map(Path.of(_)).map(preparePathForEel(project)).map { path =>
+            val eelPath = EelNioBridgeServiceKt.asEelPath(path, descriptor)
+            eelPath.toString
+          }
         }
         val classpath =
-          (jdk.tools ++ classpathFiles ++ compilerServerAdditionalCP())
-            .map(_.toCanonicalPath.toString) ++ buildProcessClasspath
+          jdk.tools.map(_.toCanonicalPath.toString) ++
+            classpathFiles.map(path => EelNioBridgeServiceKt.asEelPath(path, descriptor).toString) ++
+            compilerServerAdditionalCP().map(_.toCanonicalPath.toString) ++
+            buildProcessClasspath
 
         val freePort = CompileServerLauncher.findFreePort
         if (settings.COMPILE_SERVER_PORT != freePort) {
@@ -198,7 +209,7 @@ object CompileServerLauncher {
             NailgunRunnerFQN +:
             freePort.toString +:
             id +:
-            classpath.mkString(java.io.File.pathSeparator) +:
+            classpath.mkString(pathSeparator) +:
             scalaCompileServerSystemDir.toCanonicalPath.toString +:
             Nil
 
@@ -209,15 +220,14 @@ object CompileServerLauncher {
           else null
         }
 
-        val builder = new GeneralCommandLine(commands.asJava)
+        val commandLine = new GeneralCommandLine(commands.asJava)
           .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
           .withWorkingDirectory(workingDirectory)
-          .toProcessBuilder
 
         val incrementalCompiler = ScalaCompilerConfiguration(project).incrementalityType
 
         catching(classOf[IOException])
-          .either(builder.start())
+          .either(commandLine.createProcess())
           .left.map(e => CompileServerProblem.UnexpectedException(e))
           .map { process =>
             val bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream))
@@ -266,7 +276,7 @@ object CompileServerLauncher {
               }
             })
             infoAndPrintOnTeamcity(s"compile server process started: ${instance.summary}")
-            LOG.debug(s"command line: ${builder.command().asScala.mkString(" ")}")
+            LOG.debug(s"command line: ${commandLine.getCommandLineString}")
             LOG.debug(s"working directory: ${instance.workingDir}")
 
             if (attachDebugAgent) {
@@ -350,7 +360,7 @@ object CompileServerLauncher {
   def running: Boolean = serverInstance.exists(_.running)
 
   def port: Option[Int] = serverInstance.map(_.port)
-  def pid: Option[Long] = serverInstance.map(_.watcher.pid)
+  def pid: Option[Long] = serverInstance.map(_.pid)
 
   def defaultSdk(project: Project): Sdk =
     CompileServerJdkManager.recommendedJdk(project)._1
@@ -381,12 +391,13 @@ object CompileServerLauncher {
       version <- jdk.version
     } yield version.getMaxLanguageLevel.feature()
 
-  private def preparePathForEel(path: Path): Path = {
-    val eelDescriptor = EelProviderUtil.getEelDescriptor(path)
+  private def preparePathForEel(project: Project)(path: Path): Path = {
+    val eelDescriptor = EelProviderUtil.getEelDescriptor(project)
     EelPathUtils.transferLocalContentToRemote(path, new TransferTarget.Temporary(eelDescriptor))
   }
 
-  private def prepareCompileServerJars(jars: Seq[Path]): Seq[Path] = jars.map(preparePathForEel)
+  private def prepareCompileServerJars(jars: Seq[Path], project: Project): Seq[Path] =
+    jars.map(preparePathForEel(project))
 
   /**
    * NOTE: extra classpath for JPS process is defined in a differ place in `compiler-integration.xml` in `compileServer.plugin` extension

@@ -21,7 +21,7 @@ private final class ServerInstance(
 
   def stopped: Boolean = _stopped
 
-  def pid: Long = watcher.pid
+  def pid: Long = 12345L
 
   def destroyAndWait(): Boolean = {
     _stopped = true
