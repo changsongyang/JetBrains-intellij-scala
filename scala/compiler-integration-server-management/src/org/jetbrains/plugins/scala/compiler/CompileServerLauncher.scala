@@ -10,6 +10,9 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.advanced.AdvancedSettings
 import com.intellij.openapi.project.{Project, ProjectManager}
 import com.intellij.openapi.projectRoots.{JavaSdkVersion, ProjectJdkTable, Sdk}
+import com.intellij.platform.eel.provider.EelProviderUtil
+import com.intellij.platform.eel.provider.utils.EelPathUtils
+import com.intellij.platform.eel.provider.utils.EelPathUtils.TransferTarget
 import com.intellij.util.PathUtil
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
 import com.intellij.util.net.NetUtils
@@ -112,7 +115,8 @@ object CompileServerLauncher {
     settings.COMPILE_SERVER_SDK = jdk.name
     saveSettings()
 
-    compileServerJars.partition(_.exists) match {
+    val preparedCompileServerJars = prepareCompileServerJars(compileServerJars)
+    preparedCompileServerJars.partition(_.exists) match {
       case (presentFiles, Seq()) =>
         val (nailgunCpFiles, classpathFiles) = presentFiles.partition(_.nameContains("nailgun"))
         val nailgunClasspath = nailgunCpFiles
@@ -376,6 +380,13 @@ object CompileServerLauncher {
       jdk <- compileServerJdk(project).toOption
       version <- jdk.version
     } yield version.getMaxLanguageLevel.feature()
+
+  private def preparePathForEel(path: Path): Path = {
+    val eelDescriptor = EelProviderUtil.getEelDescriptor(path)
+    EelPathUtils.transferLocalContentToRemote(path, new TransferTarget.Temporary(eelDescriptor))
+  }
+
+  private def prepareCompileServerJars(jars: Seq[Path]): Seq[Path] = jars.map(preparePathForEel)
 
   /**
    * NOTE: extra classpath for JPS process is defined in a differ place in `compiler-integration.xml` in `compileServer.plugin` extension
