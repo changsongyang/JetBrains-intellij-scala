@@ -382,7 +382,7 @@ object ScalaPsiUtil {
 
         //implicit conversions
         def addConversions(fromUnderscore: Boolean): Unit = {
-          res = res ++ expr.getTypeAfterImplicitConversion(expectedOption = expr.smartExpectedType(fromUnderscore),
+          res = res ++ expr.getTypeAfterImplicitConversion(expectedOption = expr.expectedType(fromUnderscore),
             fromUnderscore = fromUnderscore).importsUsed
         }
 

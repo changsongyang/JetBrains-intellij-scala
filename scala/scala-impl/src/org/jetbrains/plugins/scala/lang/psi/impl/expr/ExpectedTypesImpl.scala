@@ -33,7 +33,7 @@ import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveResult
 import org.jetbrains.plugins.scala.lang.resolve.processor.DynamicResolveProcessor._
 import org.jetbrains.plugins.scala.project.ProjectPsiElementExt
 import org.jetbrains.plugins.scala.project.ScalaLanguageLevel.{Scala_2_12, Scala_2_13, Scala_3_0}
-import org.jetbrains.plugins.scala.util.{CommonQualifiedNames, ScEquivalenceUtil}
+import org.jetbrains.plugins.scala.util.ScEquivalenceUtil
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -43,14 +43,14 @@ class ExpectedTypesImpl extends ExpectedTypes {
    * Do not use this method inside of resolve or type inference.
    * Using this leads to SOE.
    */
-  override def smartExpectedType(expr: ScExpression, fromUnderscore: Boolean = true): Option[ScType] =
-    smartExpectedTypeEx(expr, fromUnderscore).map(_._1)
+//  override def smartExpectedType(expr: ScExpression, fromUnderscore: Boolean = true): Option[ScType] =
+//    smartExpectedTypeEx(expr, fromUnderscore).map(_._1)
 
-  def smartExpectedTypeEx(expr: ScExpression, fromUnderscore: Boolean = true): Option[ParameterType] = {
-    val types = expectedExprTypes(expr, withResolvedFunction = true, fromUnderscore = fromUnderscore)
-
-    filterAlternatives(types.toSeq, expr)
-  }
+//  def smartExpectedTypeEx(expr: ScExpression, fromUnderscore: Boolean = true): Option[ParameterType] = {
+//    val types = expectedExprTypes(expr, withResolvedFunction = true, fromUnderscore = fromUnderscore)
+//
+//    filterAlternatives(types.toSeq, expr)
+//  }
 
   override def expectedExprType(expr: ScExpression, fromUnderscore: Boolean = true): Option[ParameterType] = {
     val types = expr.expectedTypesEx(fromUnderscore)
@@ -102,7 +102,7 @@ class ExpectedTypesImpl extends ExpectedTypes {
   }
 
   /**
-   * When type checking a function literal supplied to an overloaded method
+   * When type checking a function literal supplied to an overloaded method,
    * we first filter expected types based on function arity and then if scalaVersion >= 2.13
    * merge function-like types with equivalent parameters (more on that below).
    *
@@ -240,7 +240,7 @@ class ExpectedTypesImpl extends ExpectedTypes {
   /**
    * @return (expectedType, expectedTypeElement)
    */
-  override def expectedExprTypes(expr: ScExpression, withResolvedFunction: Boolean = false,
+  override def expectedExprTypes(expr: ScExpression, withResolvedFunction: Boolean = true,
                                  fromUnderscore: Boolean = true): Array[ParameterType] = {
     import expr.projectContext
     implicit val context: Context = Context(expr)
@@ -607,28 +607,7 @@ class ExpectedTypesImpl extends ExpectedTypes {
       case _ => Array.empty
     }
 
-    @tailrec
-    def checkIsUnderscore(expr: ScExpression): Boolean = {
-      expr match {
-        case p: ScParenthesisedExpr =>
-          p.innerElement match {
-            case Some(e) => checkIsUnderscore(e)
-            case _ => false
-          }
-        case _ => ScUnderScoreSectionUtil.underscores(expr).nonEmpty
-      }
-    }
-
-    if (fromUnderscore && checkIsUnderscore(expr)) {
-      val res = new ArrayBuffer[ParameterType]
-      for (tp <- result) {
-        tp._1 match {
-          case FunctionType(rt: ScType, _) => res += ((rt, None))
-          case _ =>
-        }
-      }
-      res.toArray
-    } else result
+    result
   }
 
   @tailrec

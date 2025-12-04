@@ -172,7 +172,7 @@ object ScExpressionAnnotator extends ElementAnnotator[ScExpression] {
       fromUnderscore: Boolean,
       ptSubst:        ScSubstitutor
     ): Unit = {
-      val smartExpectedType = element.smartExpectedType(fromUnderscore)
+      val smartExpectedType = element.expectedType(fromUnderscore)
 
       val ExpressionTypeResult(exprType, _, implicitFunction) =
         element.getTypeAfterImplicitConversion(expectedOption = smartExpectedType, fromUnderscore = fromUnderscore)

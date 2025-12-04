@@ -436,7 +436,7 @@ private[evaluation] trait ScalaEvaluatorBuilderUtil {
 
       val arguments = exprsForP.sortBy(_.startOffset).map { argExpr =>
         val eval = evaluatorFor(argExpr)
-        argExpr.smartExpectedType() match {
+        argExpr.expectedType() match {
           case Some(tp @ ValueClassType(_)) => valueClassInstanceEvaluator(eval, tp)
           case _ => boxEvaluator(eval)
         }
@@ -653,7 +653,7 @@ private[evaluation] trait ScalaEvaluatorBuilderUtil {
             else if (exprsForP.length == 1 && !isDefaultExpr(exprsForP.head)) {
               val expr = exprsForP.head
               val eval = evaluatorFor(expr)
-              expr.smartExpectedType() match {
+              expr.expectedType() match {
                 case Some(tp @ ValueClassType(_)) if isArrayFunction => valueClassInstanceEvaluator(eval, tp)
                 case _ => eval
               }
@@ -1461,7 +1461,7 @@ private[evaluation] trait ScalaEvaluatorBuilderUtil {
       }
     }
 
-    expr.smartExpectedType() match {
+    expr.expectedType() match {
       case Some(valType: ValType) => unboxTo(valType)
       case Some(tp @ ValueClassType.Param(cp)) => unwrapValueClass(evaluator, tp, cp)
       case Some(_) =>
