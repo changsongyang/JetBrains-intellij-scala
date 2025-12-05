@@ -88,10 +88,38 @@ object CompilerTrees {
   private val Scala2TreePhaseOutputRegexp = """\[\[\s*syntax trees at end of\s+(.*?)]].*?""".r
 
   private def parseForScala3(messages: Seq[Client.ClientMsg]): CompilerTrees = {
-    val phaseToTreeText = messages.map(_.text).collect {
-      case Scala3TreePhaseOutputWithTreeRegexp(phaseText, treeText) =>
-        PhaseWithTreeText(phaseText.trim, treeText.trim)
+    val capturedWithPhases = messages.collect {
+      case msg @ Client.ClientMsg(_, Scala3TreePhaseOutputWithTreeRegexp(phaseText, treeText), _, _, _, _, _) =>
+        (msg, PhaseWithTreeText(phaseText.trim, treeText.trim))
     }
-    new CompilerTrees(phaseToTreeText)
+
+    val capturedMessages = capturedWithPhases.map(_._1).toSet
+    val phaseToTreeText = capturedWithPhases.map(_._2)
+
+    val uncapturedMessages = messages.filterNot(capturedMessages.contains)
+
+    // TODO: don't apply Scala syntax in the editor for the uncaptured output
+    //  (currently we reuse the same editor with same Scala PSI File for all phases texts)
+    //  (see CompilerTreesDialog)
+    val syntheticOutputPhases: Seq[PhaseWithTreeText] =
+      buildSyntheticPhasesForUncapturedOutput(uncapturedMessages)
+
+    new CompilerTrees(phaseToTreeText ++ syntheticOutputPhases)
+  }
+
+  private def buildSyntheticPhasesForUncapturedOutput(uncapturedMessages: Seq[Client.ClientMsg]): Seq[PhaseWithTreeText] = {
+    val messagesByKind = uncapturedMessages
+      .groupBy(_.kind)
+      .toSeq
+      .sortBy(_._1.toString)
+
+    messagesByKind.flatMap { case (kind, messages) =>
+      val text = messages.map(_.text).mkString("\n")
+      if (text.nonEmpty)
+        // Example: "== WARNING Output =="
+        Some(PhaseWithTreeText(s"== ${kind.toString.toUpperCase} Output ==", text))
+      else
+        None
+    }
   }
 }
