@@ -18,7 +18,17 @@ import scala.collection.mutable
 // nonEmpty predicate
 // implicit StringBuilder?
 // indent: opaque type, implicit
-class TreePrinter(privateMembers: Boolean = false, infixTypes: Boolean = false, legacySyntax: Boolean = false) {
+/**
+ * The class contains logic to print Tasty internal presentation ([[Node]]) as a human-readable Scala source file with outlines.<br>
+ * The entry point is [[fileAndTextOf]] method.
+ *
+ * @see [[TreeReader]] ~ reading Tasty contnet to internal Node represenataion
+ */
+class TreePrinter(
+  privateMembers: Boolean = false,
+  infixTypes: Boolean = false,
+  legacySyntax: Boolean = false
+) {
   private final val Indent = "  "
   private final val CompiledCode = "???"
 
