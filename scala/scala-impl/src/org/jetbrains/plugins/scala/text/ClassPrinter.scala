@@ -267,7 +267,7 @@ class ClassPrinter(isScala3: Boolean, extendsSeparator: String = " ", withPrivat
     (if (ml.isAbstract && ml.isOverride) "abstract " else "") +
       (if (ml.isOverride) "override " else "") +
       (if (ml.isPrivate) "private" + qualifier + " " else "") +
-      (if (ml.isProtected) "protected" + qualifier + " " else "") +
+      (if (ml.isProtected) "protected" + (if (normalize && qualifier == "[this]") "" else qualifier) + " " else "") +
       (if (ml.isImplicit) "implicit " else "") +
       (if (ml.isFinal) "final " else "") +
       (if (ml.isSealed) "sealed " else "") +
