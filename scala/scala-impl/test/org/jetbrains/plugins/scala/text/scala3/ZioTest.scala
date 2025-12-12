@@ -15,6 +15,11 @@ class ZioTest extends TextToTextTestBase(
     "zio.internal.stacktracer.SourceLocation", // Given without a name
   ),
   withSources = true,
+  classesWithoutSource = Set(
+    "zio.BuildInfo",
+    "zio.internal.stacktracer.BuildInfo",
+    "zio.stream.BuildInfo",
+  ),
   sourceExceptions = Set(
     "zio.Fiber", // case class extends Product & Serializable
     "zio.RuntimeFlag", // reference constants
@@ -27,7 +32,6 @@ class ZioTest extends TextToTextTestBase(
     "zio.internal.macros.ZLayerDerivationMacros", // Expr[...]
     "zio.metrics.MetricPair", // private type alias
     "zio.stm.STM", // zio.BuildFrom vs BuildFromCompat.this.BuildFrom
-    "zio.stm.ZSTM", // protected vs private[this]
     "zio.stream.ZChannel", // zio.EnvironmentTag vs VersionSpecific.this.EnvironmentTag
   )
 )
